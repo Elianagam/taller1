@@ -15,22 +15,29 @@
 #define BYTES4 4 
 #define BYTE1 1
 
+#define GET_VALUE 'G'
+#define VERIFY_VALUE 'V'
+#define PUT_VALUE 'P'
+#define RESET_VALUE 'R'
+
+#define STATIC_CELL_MSG "La celda indicada no es modificable\n\0"
+#define OK_MSG "OK\n\0"
+#define ERROR_MSG "ERROR\n\0"
+
 void server_init(server_t* self, socket_t* socket) {
 	self->socket = socket;
 	table_t table;
 	table_init(&table);
 	self->table = table;
-	self->get = 'G';
-	self->verify = 'V';
-	self->put = 'P';
-	self->reset = 'R';
+	self->get = GET_VALUE;
+	self->verify = VERIFY_VALUE;
+	self->put = PUT_VALUE;
+	self->reset = RESET_VALUE;
 }
 
 void server_destroy(server_t* self) {
 	table_destroy(&self->table);
 	socket_relase(self->socket);
-	//free(self->socket);
-	//free(self);
 }
 
 int server_receive_values(server_t* server) {
@@ -79,7 +86,7 @@ int server_send_message(server_t* server, char* message) {
 int servet_response_put(server_t* server) {
 	int res = server_receive_values(server);
 	if (res == DONT_WRITE) {
-		char message[] = "La celda indicada no es modificable\n\0";
+		char message[] = STATIC_CELL_MSG;
 		return server_send_message(server, message);
 	} else {
 		return server_send_table(server);
@@ -90,24 +97,24 @@ int servet_response_put(server_t* server) {
 int server_verify(server_t* server) {
 	int res;
 	if (table_verify(&server->table) == true) {
-		char message[] = "OK\n\0";
+		char message[] = OK_MSG;
 		res = server_send_message(server, message);
 	} else {
-		char message[] = "ERROR\n\0";
+		char message[] = ERROR_MSG;
 		res = server_send_message(server, message);
 	}
 	return res;
 }
 
 int server_response_prosessing(server_t* server, char* buffer) {
-	if (strncmp(buffer, &server->get, sizeof(char)) == 0) {
+	if (strncmp(buffer, &server->get, BYTE1) == 0) {
 		return server_send_table(server);
-	} else if (strncmp(buffer, &server->verify, sizeof(char)) == 0) {
+	} else if (strncmp(buffer, &server->verify, BYTE1) == 0) {
 		return server_verify(server);
-	} else if (strncmp(buffer, &server->reset, sizeof(char)) == 0) {
+	} else if (strncmp(buffer, &server->reset, BYTE1) == 0) {
 		table_reset(&server->table);
 		return server_send_table(server);
-	} else if (strncmp(buffer, &server->put, sizeof(char)) == 0) {
+	} else if (strncmp(buffer, &server->put, BYTE1) == 0) {
 		return servet_response_put(server);
 	} else {
 		return 0;
@@ -128,7 +135,7 @@ int main_server(char* port) {
 	char buffer[2];
 	buffer[1] = '\0';
 	while (res > 0) {
-		res = socket_receive(&socket, buffer, sizeof(char));
+		res = socket_receive(&socket, buffer, BYTE1);
 		if (res == 0)
 			break;
 		res = server_response_prosessing(&server, buffer);

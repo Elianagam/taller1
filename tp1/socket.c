@@ -16,10 +16,13 @@
 #define ERROR_ -1
 #define BACKLOG 1
 
+#define ERROR_INIT "Error Socket Init\n"
+#define ERROR_ACCEPT "Error Accept\n"
+
 void socket_init(socket_t* self) {
 	self->fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (self->fd == -1) { 
-		printf("Error Socket Init\n");
+	if (self->fd == ERROR_) { 
+		printf(ERROR_INIT);
 	}
 }
 
@@ -45,10 +48,10 @@ int socket_connect(socket_t* socket, const char* host, const char* server) {
 	for (ptr = results; ptr != NULL && are_we_connected == false; 
 			ptr = ptr->ai_next) {
 		connect_ = connect(socket->fd, results->ai_addr, results->ai_addrlen);
-		if (connect_ == -1) {
+		if (connect_ == ERROR_) {
 			are_we_connected = false;
 		}
-		are_we_connected = (connect_ != -1);
+		are_we_connected = (connect_ != ERROR_);
 	}
 	freeaddrinfo(results);
 	if (are_we_connected == false) {
@@ -67,7 +70,7 @@ int socket_send(socket_t* self, void* buffer, size_t length) {
 		send_ = send(self->fd, buf + bytes_sent, length - bytes_sent,
 				 MSG_NOSIGNAL);
 
-		if (send_ == -1) {
+		if (send_ == ERROR_) {
 			socket_valid = false;
 		} else if (send_ == 0) {
 			socket_valid = false;
@@ -89,7 +92,7 @@ int socket_receive(socket_t* self, void* buffer, size_t length) {
 	while (bytes_recv < length && socket_valid == true) {
 		recv_ = recv(self->fd, buf + bytes_recv, length - bytes_recv, 0); //-1
 
-		if (recv_ == -1) {
+		if (recv_ == ERROR_) {
 			socket_valid = false;
 		} else if (recv_ == 0) {
 			socket_valid = false;
@@ -105,7 +108,7 @@ int socket_receive(socket_t* self, void* buffer, size_t length) {
 int socket_accept(socket_t* self) {
 	int new_fd = accept(self->fd, NULL, NULL);
 	if (new_fd < 0) {
-		printf("Error Accept");
+		printf(ERROR_ACCEPT);
 		return ERROR_;
 	}
 	return new_fd;
@@ -131,7 +134,7 @@ int socket_bind_and_listen(socket_t* socket, const char* service) {
 		if (s < 0) {
 			are_we_connected = false;
 		}
-		are_we_connected = (s != -1);
+		are_we_connected = (s != ERROR_);
 	}
 	if (are_we_connected == false) {
 		return ERROR_;

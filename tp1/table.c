@@ -10,19 +10,27 @@
 #define ERROR_ -1
 #define DONT_WRITE -2
 
+#define SPACE ' '
+#define NEW_LINE '\n'
+
+#define BORDER1 "U===========U===========U===========U\n\0"
+#define BORDER2 "\nU---+---+---U---+---+---U---+---+---U\n\0"
+#define BOX_BORDER 'U'
+#define LINE_BORDER '|'
+
 // FUNCIONES AUXILIARES -------------------
 int border_1(char* buffer, int pos) {
 	if (pos != 0) buffer[pos++] = '\n';
 	
-	char border1[] = "U===========U===========U===========U\n\0";
+	char border1[] = BORDER1;
 	for (int i = 0; i < 38; i++) {
-	 buffer[pos++] = border1[i];
+		buffer[pos++] = border1[i];
 	}
 	return pos++;
 }
 
 int border_2(char* buffer, int pos) {
-	char border2[] = "\nU---+---+---U---+---+---U---+---+---U\n\0";
+	char border2[] = BORDER2;
 	for (int i = 0; i < 39; i++) {
 		buffer[pos++] = border2[i];
 	}
@@ -36,7 +44,7 @@ void table_append_cells(FILE* file, table_t* table) {
 		n_col = 0;
 		while (n_col < SIZE) {
 			ch = fgetc(file);
-			if (ch != ' ' && ch != '\n') {
+			if (ch != SPACE && ch != NEW_LINE) {
 				cell_init(&table->cells[n_row][n_col], ch);	
 				n_col++;
 			}
@@ -123,16 +131,16 @@ char* table_get(table_t* table, char* buffer) {
 	int pos = 0;
 	pos = border_1(buffer, pos);
 	for (int i = 0; i < SIZE; i++) {
-		buffer[pos++] = 'U';
+		buffer[pos++] = BOX_BORDER;
 		for (int j = 0; j < SIZE; j++) {
 				buffer[pos++] = ' ';
 				cell_t* cell = &table->cells[i][j];
 				buffer[pos++] = cell->value;
-				buffer[pos++] = ' ';
+				buffer[pos++] = SPACE;
 			if ((j+1) % 3 == 0) {
-				buffer[pos++] = 'U';
+				buffer[pos++] = BOX_BORDER;
 			} else {
-				buffer[pos++] = '|';
+				buffer[pos++] = LINE_BORDER;
 			}
 		}
 		if ((i+1) % 3 == 0) {
@@ -164,10 +172,5 @@ void table_reset(table_t* table) {
 }
 
 void table_destroy(table_t* table) {
-	/*for (int n_row = 0; n_row < SIZE; n_row++) {
-		for (int n_col = 0; n_col < SIZE; n_col++) {
-			free(table->cells[n_row][n_col]);
-		}
-	}
-	free(table);*/
+	// pass
 }

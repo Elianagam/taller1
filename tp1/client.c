@@ -17,13 +17,29 @@
 #define BYTES4 4
 #define BYTE1 1
 
+#define INVALID_VALUE 'E'
+#define RESET_VALUE "R"
+#define VERIFY_VALUE "V"
+#define GET_VALUE "G"
+#define PUT_VALUE "P"
+
+#define GET_STRING "get\0"
+#define VERIFY_STRING "verify\0"
+#define RESET_STRING "reset\0"
+#define EXIT_STRING "exit\0"
+
+#define VERIFY_LEN 6
+#define EXIT_LEN 4
+#define GET_LEN 3
+#define RESET_LEN 5
+
 // FUNCIONES AUXILIARES ------------------------
 int get_value(char* buffer) {
 	char pos = buffer[VALUE_POS];
 	if (atoi(&pos) > 0) {
 		return pos;
 	}
-	return 'E';
+	return INVALID_VALUE;
 }
 
 int get_row(char* buffer) {
@@ -64,21 +80,18 @@ int check_put_response(char* buffer) {
 // ----------------------------------------------
 void client_init(client_t* self, socket_t* socket) {
 	self->socket = socket;
-	self->get = "get\0";
-	self->reset = "reset\0";
-	self->verify = "verify\0";
-	self->exit = "exit\0";
+	self->get = GET_STRING;
+	self->reset = RESET_STRING;
+	self->verify = VERIFY_STRING;
+	self->exit = EXIT_STRING;
 	}
 
 void client_destroy(client_t* self) {
-	socket_relase(self->socket);
-	//free(self->socket);
-	//free(self);
-}
+	socket_relase(self->socket);}
 
 int client_send_put(client_t* client, char* buffer) {
 	int res;
-	res = socket_send(client->socket, "P", BYTE1);
+	res = socket_send(client->socket, PUT_VALUE, BYTE1);
 	uint8_t row = get_row(buffer);
 	res = socket_send(client->socket, &row, BYTE1);
 	
@@ -108,17 +121,17 @@ int client_get(client_t* client) {
 
 int client_request_prosessing(client_t* client, char* buffer) {
 	int res = EXIT_;
-	if (strncmp(buffer, client->get, 3) == 0) {
-		res = socket_send(client->socket, "G", BYTE1);
+	if (strncmp(buffer, client->get, GET_LEN) == 0) {
+		res = socket_send(client->socket, GET_VALUE, BYTE1);
 		res = client_get(client);
-	} else if (strncmp(buffer, client->verify, 6) == 0) {
-		res = socket_send(client->socket, "V", BYTE1);
+	} else if (strncmp(buffer, client->verify, VERIFY_LEN) == 0) {
+		res = socket_send(client->socket, VERIFY_VALUE, BYTE1);
 		res = client_get(client);
-	} else if (strncmp(buffer, client->reset, 5) == 0) {
-		res = socket_send(client->socket, "R", BYTE1);
+	} else if (strncmp(buffer, client->reset, RESET_LEN) == 0) {
+		res = socket_send(client->socket, RESET_VALUE, BYTE1);
 		res = client_get(client);
 		
-	} else if (strncmp(buffer, client->exit, 4) == 0) {
+	} else if (strncmp(buffer, client->exit, EXIT_LEN) == 0) {
 		return EXIT_;
 	} else if (check_put_response(buffer) == 0) {
 		res = client_send_put(client, buffer);

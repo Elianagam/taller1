@@ -4,12 +4,14 @@
 #include <stddef.h>
 
 #define ERROR_ -1
+#define SPACE  ' '
+#define VALID_CELL '0'
 
 void cell_init(cell_t* cell, char value) {
 	bool fixed = true;
-	if (value == '0') {
+	if (value == VALID_CELL) {
 		fixed = false;
-		cell->value = ' ';
+		cell->value = SPACE;
 		cell->fixed = fixed;
 	} else {
 		cell->value = value;
@@ -35,5 +37,5 @@ bool cell_is_fixed(cell_t* self) {
 }
 
 bool cell_has_value(cell_t* self) {
-	return self->value != ' ';
+	return self->value != SPACE;
 }
